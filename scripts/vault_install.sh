@@ -1,6 +1,6 @@
 #!/bin/bash
 
-export VAULT_VERSION="1.9.2"
+export VAULT_VERSION="1.6.2"
 export VAULT_URL="https://releases.hashicorp.com/vault"
 export CONSUL_VERSION="1.9.2"
 export CONSUL_URL="https://releases.hashicorp.com/consul"
@@ -20,6 +20,7 @@ sudo mkdir --parents /var/consul
 sudo chown --recursive consul:consul /opt/consul
 sudo chown --recursive consul:consul /var/run/consul
 sudo chown --recursive consul:consul /var/consul
+sudo chown --recursive vault:vault /opt/vault
 
 cd /opt/consul/
 curl --silent --remote-name ${CONSUL_URL}/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
@@ -35,30 +36,30 @@ curl --silent --remote-name ${VAULT_URL}/${VAULT_VERSION}/vault_${VAULT_VERSION}
 unzip vault_${VAULT_VERSION}_linux_amd64.zip
 sudo cp vault /usr/local/bin/vault
 
-cat << EOF > /etc/vault/vault_server.hcl
-    listener "tcp" {
-      address          = "0.0.0.0:8200"
-      cluster_address  = "${LOCAL_IP}:8201"
-      tls_disable      = "true"
-    }
-    storage "consul" {
-      address = "127.0.0.1:8500"
-      path    = "vault/"
-    }
-    api_addr = "http://${LOCAL_IP}:8200"
-    cluster_addr = "https://${LOCAL_IP}:8201"
-    ui = true
+cat << EOF > /opt/vault/vault_server.hcl
+listener "tcp" {
+  address          = "0.0.0.0:8200"
+  cluster_address  = "10.0.0.6:8201"
+  tls_disable      = "true"
+}
+storage "consul" {
+  address = "127.0.0.1:8500"
+  path    = "vault/"
+}
+api_addr = "http://10.0.0.6:8200"
+cluster_addr = "https://10.0.0.6:8201"
+ui = true
 EOF
 
-cat << EOF > /usr/local/etc/consul/consul_c1.json
+cat << EOF > /opt/consul/consul_c1.json
     {
       "server": false,
       "datacenter": "dc1",
-      "node_name": "consul_c1",
+      "node_name": "consul_c1", ############## DINAMICO
       "data_dir": "/var/consul/data",
-      "bind_addr": ${LOCAL_IP},
+      "bind_addr": "${LOCAL_IP}",
       "client_addr": "127.0.0.1",
-      "retry_join": ["10.0.0.4", "10.0.0.7", "10.0.0.8"],
+      "retry_join": ["10.0.0.4", "10.0.0.7", "10.0.0.8"], ############
       "log_level": "DEBUG",
       "enable_syslog": true,
       "acl_enforce_version_8": false
@@ -89,7 +90,7 @@ cat << EOF > /etc/systemd/system/consul.service
     ExecStartPre=-/bin/mkdir -p /var/run/consul
     ExecStartPre=/bin/chown -R consul:consul /var/run/consul
     ExecStart=/usr/local/bin/consul agent \
-        -config-file=/usr/local/etc/consul/consul_c1.json \
+        -config-file=/opt/consul/consul_c1.json \
         -pid-file=/var/run/consul/consul.pid
     ExecReload=/bin/kill -HUP $MAINPID
     KillMode=process
@@ -121,7 +122,7 @@ After=network-online.target
 User=vault
 Group=vault
 PIDFile=/var/run/vault/vault.pid
-ExecStart=/usr/local/bin/vault server -config=/etc/vault/vault_server.hcl -log-level=debug
+ExecStart=/usr/local/bin/vault server -config=/opt/vault/vault_server.hcl -log-level=debug
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 KillSignal=SIGTERM
@@ -135,3 +136,6 @@ EOF
 
 systemctl start consul
 systemctl start vault
+
+
+# export VAULT_ADDR="http://127.0.0.1:8200"

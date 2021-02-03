@@ -28,52 +28,50 @@ unzip consul_${CONSUL_VERSION}_linux_amd64.zip
 sudo cp consul /usr/local/bin/consul
 
 cat << EOF > /opt/consul/consul_s1.json
-    {
-      "server": true,
-      "node_name": "consul_s1",     ### DINAMICO
-      "datacenter": "dc1",
-      "data_dir": "/var/consul/data",
-      "bind_addr": "0.0.0.0",
-      "client_addr": "0.0.0.0",
-      "advertise_addr": "${LOCAL_IP}", ### ADICIONAR IP DE TODOS OS NÓS
-      "bootstrap_expect": 3,
-      "retry_join": ["${LOCAL_IP}"],   ### ADICIONAR IP DE TODOS OS NÓS
-      "ui": true,
-      "log_level": "DEBUG",
-      "enable_syslog": true,
-      "acl_enforce_version_8": false
-    }
+{
+  "server": true,
+  "node_name": "consul_s1",     ### DINAMICO
+  "datacenter": "dc1",
+  "data_dir": "/var/consul/data",
+  "bind_addr": "0.0.0.0",
+  "client_addr": "0.0.0.0",
+  "advertise_addr": "${LOCAL_IP}", ### ADICIONAR IP DE TODOS OS NÓS
+  "bootstrap_expect": 3,
+  "retry_join": ["${LOCAL_IP}"],   ### ADICIONAR IP DE TODOS OS NÓS
+  "ui": true,
+  "log_level": "DEBUG",
+  "enable_syslog": true,
+  "acl_enforce_version_8": false
+}
 EOF
 
 cat << EOF > /etc/systemd/system/consul.service
-    # Default-Stop:      0 1 6
-    # Short-Description: Consul agent
-    # Description:       Consul service discovery framework
-    ### END INIT INFO
+# Default-Stop:      0 1 6
+# Short-Description: Consul agent
+# Description:       Consul service discovery framework
+### END INIT INFO
 
-    [Unit]
-    Description=Consul server agent
-    Requires=network-online.target
-    After=network-online.target
-
-    [Service]
-    User=consul
-    Group=consul
-    PIDFile=/var/run/consul/consul.pid
-    PermissionsStartOnly=true
-    ExecStartPre=-/bin/mkdir -p /var/run/consul
-    ExecStartPre=/bin/chown -R consul:consul /var/run/consul
-    ExecStart=/usr/local/bin/consul agent \
-        -config-file=/opt/consul/consul_s1.json \
-        -pid-file=/var/run/consul/consul.pid
-    ExecReload=/bin/kill -HUP $MAINPID
-    KillMode=process
-    KillSignal=SIGTERM
-    Restart=on-failure
-    RestartSec=42s
-
-    [Install]
-    WantedBy=multi-user.target
+[Unit]
+Description=Consul server agent
+Requires=network-online.target
+After=network-online.target
+[Service]
+User=consul
+Group=consul
+PIDFile=/var/run/consul/consul.pid
+PermissionsStartOnly=true
+ExecStartPre=-/bin/mkdir -p /var/run/consul
+ExecStartPre=/bin/chown -R consul:consul /var/run/consul
+ExecStart=/usr/local/bin/consul agent \
+    -config-file=/opt/consul/consul_s1.json \
+    -pid-file=/var/run/consul/consul.pid
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGTERM
+Restart=on-failure
+RestartSec=42s
+[Install]
+WantedBy=multi-user.target
 EOF
 
 systemctl start consul
