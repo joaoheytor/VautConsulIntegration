@@ -21,6 +21,24 @@ services:
     depends_on:
       - consul
 
+  vault-slave:
+    build:
+      context: ./vault
+      dockerfile: Dockerfile
+    ports:
+      - 8201:8200
+    volumes:
+      - ./vault/config:/vault/config
+      - ./vault/policies:/vault/policies
+      - ./vault/data:/vault/data
+      - ./vault/logs:/vault/logs
+    command: server -config=/vault/config/vault-config.json
+    #command: vault operator raft join http://127.0.0.2:8200
+    cap_add:
+      - IPC_LOCK
+    depends_on:
+      - consul
+
   consul:
     build:
       context: ./consul
