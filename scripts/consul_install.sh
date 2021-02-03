@@ -2,7 +2,7 @@
 
 export CONSUL_VERSION="1.9.2"
 export CONSUL_URL="https://releases.hashicorp.com/consul"
-export LOCAL_NAME=`ip -o addr show dev "eth0" | awk '$3 == "inet" {print $4}' | sed -r 's!/.*!!; s!.*\.!!'`
+export LOCAL_NAME=`ip -o addr show dev "eth0" | awk '$3 == "inet" {print $4}' | sed -r 's!/.*!!; s!.*\.!!' | sed 's/ //g'`
 export LOCAL_IP=`hostname -I`
 
 sudo hostname consulserver-${LOCAL_NAME}
@@ -13,7 +13,10 @@ sudo apt-get install -y unzip
 
 sudo useradd --system --home /etc/consul.d --shell /bin/false consul
 sudo mkdir --parents /opt/consul
+sudo mkdir --parents /var/consul
 sudo chown --recursive consul:consul /opt/consul
+sudo chown --recursive consul:consul /var/run/consul
+sudo chown --recursive consul:consul /var/consul
 
 cd /opt/consul/
 curl --silent --remote-name ${CONSUL_URL}/${CONSUL_VERSION}/consul_${CONSUL_VERSION}_linux_amd64.zip
@@ -22,18 +25,18 @@ curl --silent --remote-name ${CONSUL_URL}/${CONSUL_VERSION}/consul_${CONSUL_VERS
 
 unzip consul_${CONSUL_VERSION}_linux_amd64.zip
 
-sudo cp consul /usr/bin/
+sudo cp consul /usr/local/bin/consul
 
 cat << EOF > /opt/consul/consul_s1.json
     {
       "server": true,
-      "node_name": "consul_s1",
+      "node_name": "consul_s1",     ### DINAMICO
       "datacenter": "dc1",
       "data_dir": "/var/consul/data",
       "bind_addr": "0.0.0.0",
       "client_addr": "0.0.0.0",
       "advertise_addr": "${LOCAL_IP}", ### ADICIONAR IP DE TODOS OS NÓS
-      "bootstrap_expect": 1,
+      "bootstrap_expect": 3,
       "retry_join": ["${LOCAL_IP}"],   ### ADICIONAR IP DE TODOS OS NÓS
       "ui": true,
       "log_level": "DEBUG",
