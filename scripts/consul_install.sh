@@ -9,7 +9,7 @@ sudo hostname consulserver-${LOCAL_NAME}
 sudo echo consulserver-${LOCAL_NAME} > /etc/hostname
 
 sudo apt-get update -y && apt-get upgrade -y
-sudp apt-get install -y unzip
+sudo apt-get install -y unzip
 
 sudo useradd --system --home /etc/consul.d --shell /bin/false consul
 sudo mkdir --parents /opt/consul
@@ -32,9 +32,9 @@ cat << EOF > /opt/consul/consul_s1.json
       "data_dir": "/var/consul/data",
       "bind_addr": "0.0.0.0",
       "client_addr": "0.0.0.0",
-      "advertise_addr": "${LOCAL_IP}",
+      "advertise_addr": "${LOCAL_IP}", ### ADICIONAR IP DE TODOS OS NÓS
       "bootstrap_expect": 1,
-      "retry_join": ["${LOCAL_IP}"],
+      "retry_join": ["${LOCAL_IP}"],   ### ADICIONAR IP DE TODOS OS NÓS
       "ui": true,
       "log_level": "DEBUG",
       "enable_syslog": true,
