@@ -52,54 +52,51 @@ ui = true
 EOF
 
 cat << EOF > /opt/consul/consul_c1.json
-    {
-      "server": false,
-      "datacenter": "dc1",
-      "node_name": "consul_c1", ############## DINAMICO
-      "data_dir": "/var/consul/data",
-      "bind_addr": "${LOCAL_IP}",
-      "client_addr": "127.0.0.1",
-      "retry_join": ["10.0.0.4", "10.0.0.7", "10.0.0.8"], ############
-      "log_level": "DEBUG",
-      "enable_syslog": true,
-      "acl_enforce_version_8": false
-    }
+{
+  "server": false,
+  "datacenter": "dc1",
+  "node_name": "consul_c1", ############## DINAMICO
+  "data_dir": "/var/consul/data",
+  "bind_addr": "${LOCAL_IP}",
+  "client_addr": "127.0.0.1",
+  "retry_join": ["10.0.0.4", "10.0.0.7", "10.0.0.8"], ############
+  "log_level": "DEBUG",
+  "enable_syslog": true,
+  "acl_enforce_version_8": false
+}
 EOF
 
 cat << EOF > /etc/systemd/system/consul.service
-    ### BEGIN INIT INFO
-    # Provides:          consul
-    # Required-Start:    $local_fs $remote_fs
-    # Required-Stop:     $local_fs $remote_fs
-    # Default-Start:     2 3 4 5
-    # Default-Stop:      0 1 6
-    # Short-Description: Consul agent
-    # Description:       Consul service discovery framework
-    ### END INIT INFO
-
-    [Unit]
-    Description=Consul client agent
-    Requires=network-online.target
-    After=network-online.target
-
-    [Service]
-    User=consul
-    Group=consul
-    PIDFile=/var/run/consul/consul.pid
-    PermissionsStartOnly=true
-    ExecStartPre=-/bin/mkdir -p /var/run/consul
-    ExecStartPre=/bin/chown -R consul:consul /var/run/consul
-    ExecStart=/usr/local/bin/consul agent \
-        -config-file=/opt/consul/consul_c1.json \
-        -pid-file=/var/run/consul/consul.pid
-    ExecReload=/bin/kill -HUP $MAINPID
-    KillMode=process
-    KillSignal=SIGTERM
-    Restart=on-failure
-    RestartSec=42s
-
-    [Install]
-    WantedBy=multi-user.target
+### BEGIN INIT INFO
+# Provides:          consul
+# Required-Start:    $local_fs $remote_fs
+# Required-Stop:     $local_fs $remote_fs
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Consul agent
+# Description:       Consul service discovery framework
+### END INIT INFO
+[Unit]
+Description=Consul client agent
+Requires=network-online.target
+After=network-online.target
+[Service]
+User=consul
+Group=consul
+PIDFile=/var/run/consul/consul.pid
+PermissionsStartOnly=true
+ExecStartPre=-/bin/mkdir -p /var/run/consul
+ExecStartPre=/bin/chown -R consul:consul /var/run/consul
+ExecStart=/usr/local/bin/consul agent \
+    -config-file=/opt/consul/consul_c1.json \
+    -pid-file=/var/run/consul/consul.pid
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGTERM
+Restart=on-failure
+RestartSec=42s
+[Install]
+WantedBy=multi-user.target
 EOF
 
 cat << EOF > /etc/systemd/system/vault.service
